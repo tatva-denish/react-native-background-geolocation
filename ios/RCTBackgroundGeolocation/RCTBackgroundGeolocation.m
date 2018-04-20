@@ -20,7 +20,6 @@
 #import "Config.h"
 #import "BackgroundGeolocationFacade.h"
 #import "BackgroundTaskManager.h"
-
 #define isNull(value) value == nil || [value isKindOfClass:[NSNull class]]
 
 @implementation RCTBackgroundGeolocation {
@@ -169,11 +168,12 @@ RCT_EXPORT_METHOD(deleteAllLocations:(RCTResponseSenderBlock)success failure:(RC
     });
 }
 
-RCT_EXPORT_METHOD(getLogEntries:(int)limit fromLogEntryId:(int)logEntry minLogLevel:(NSString*)minLogLevel success:(RCTResponseSenderBlock)success failure:(RCTResponseSenderBlock)failure)
+RCT_EXPORT_METHOD(getLogEntries:(int)limit success:(RCTResponseSenderBlock)success failure:(RCTResponseSenderBlock)failure)
 {
     RCTLogInfo(@"RCTBackgroundGeolocation #getLogEntries");
+//    limit = isNull(limit) ? [NSNumber numberWithInt:0] : limit;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        NSArray *logs = [facade getLogEntries:limit fromLogEntryId:logEntry minLogLevelFromString:minLogLevel];
+        NSArray *logs = [facade getLogEntries:limit];
         success(@[logs]);
     });
 }
@@ -297,6 +297,17 @@ RCT_EXPORT_METHOD(endTask:(NSNumber* _Nonnull)taskKey)
 - (void) onActivityChanged:(Activity *)activity
 {
     RCTLogInfo(@"RCTBackgroundGeoLocation activity changed");
+    Config *config = [facade getConfig];
+    if ([config driverid]) {
+        RCTLogInfo(@"RCTBackgroundGeolocation #getLocations");
+        if ([config driver_availibility_status]) {
+            [[NSUserDefaults standardUserDefaults] setObject:[config driverid] forKey:@"DRIVERID"];
+            [[NSUserDefaults standardUserDefaults] setObject:[config url] forKey:@"MAINURL"];
+            [[NSUserDefaults standardUserDefaults] setBool:[config driver_availibility_status] forKey:@"DRIVER_AVAILABILITY_STATUS"];
+            [[NSUserDefaults standardUserDefaults] setObject:[config access_token] forKey:@"ACCESS_TOKEN"];
+        }
+    }
+
     [self sendEvent:@"activity" resultAsDictionary:[activity toDictionary]];
 }
 
